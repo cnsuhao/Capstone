@@ -80,7 +80,6 @@ namespace C4
 			const LocatorMarker		*spawnLocator;
 
 			ChaseCamera				chaseCamera;
-            ChaseOrthoCamera        chaseOrthoCamera;
 
 			static const LocatorMarker *FindSpawnLocator(const Zone *zone);
 
@@ -98,11 +97,6 @@ namespace C4
 			{
 				return (&chaseCamera);
 			}
-        
-            ChaseOrthoCamera *GetChaseOrthoCamera(void)
-            {
-                return (&chaseOrthoCamera);
-            }
 
 			ResourceResult Preprocess(void);
 

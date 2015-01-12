@@ -48,29 +48,6 @@ namespace C4
         void Move(void) override;
     };
     
-    class ChaseOrthoCamera : public OrthoCamera
-    {
-    private:
-       
-        Model       *targetModel;
-        
-    public:
-        
-        ChaseOrthoCamera();
-        ~ChaseOrthoCamera();
-        
-        Model *GetTargetModel(void) const
-        {
-            return (targetModel);
-        }
-        
-        void SetTargetModel(Model *model)
-        {
-            targetModel = model;
-        }
-        
-        void Move(void) override;
-    };
 }
 
 

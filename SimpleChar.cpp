@@ -256,8 +256,8 @@ Game::Game() :
 	TheEngine->AddCommand(&hostCommand);
 
 	// Set some settings in the network manager.
-	TheNetworkMgr->SetProtocol(kGameProtocol);
-	TheNetworkMgr->SetPortNumber(kGamePort);
+    TheNetworkMgr->SetProtocol(C4::kGameProtocol);
+    TheNetworkMgr->SetPortNumber(C4::kGamePort);
     
 
 	soldierController = nullptr;
@@ -265,12 +265,12 @@ Game::Game() :
 
 Game::~Game()
 {
+    TheMessageMgr->EndGame();
 	// When the game DLL is about to be unloaded, this destructor is called.
 
 	TheWorldMgr->UnloadWorld();
 	TheWorldMgr->SetWorldConstructor(nullptr);
     
-    TheMessageMgr->SetPlayerConstructor(nullptr);
 
 	delete useAction;
 	delete downAction;
@@ -282,7 +282,7 @@ Game::~Game()
 
 	// Restore the previous escape key handling function.
 
-	TheInputMgr->SetEscapeProc(prevEscapeProc, prevEscapeCookie);
+	TheInputMgr->SetEscapeProc(prevEscapeProc, prevEscapeData);
 }
 
 World *Game::ConstructWorld(const char *name, void *cookie)

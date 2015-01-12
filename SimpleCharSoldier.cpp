@@ -185,6 +185,7 @@ void SoldierController::Move(void)
         // We use these to change the angles representing the direction in
         // which the player is looking/moving.
         
+        //float azm = modelAzimuth + tan(TheInputMgr->GetMouseDeltaY()/TheInputMgr->GetMouseDeltaX());
         float azm = modelAzimuth + TheInputMgr->GetMouseDeltaX();
         //printf("%+.2f", TheInputMgr->GetMouseDeltaX());
         if (azm < -K::pi) azm += K::two_pi;
@@ -229,7 +230,8 @@ void SoldierController::Move(void)
             0.0F, 4.0F, 2.0F, -2.0F, 1.0F, -1.0F, 3.0F, -3.0F
         };
         
-        float direction = movementDirectionTable[index] * K::pi_over_4 + modelAzimuth;
+        //float direction = movementDirectionTable[index] * K::pi_over_4 + modelAzimuth;
+        float direction = movementDirectionTable[index] * K::pi_over_4;
         
         // Set the propulsive force based on the direction of movement.
         
@@ -266,7 +268,7 @@ void SoldierController::Move(void)
     // Change the soldier's orientation based on horizontal mouse movement.
     // The SetCharacterOrientation() function is a member of the CharacterController base class.
     
-    float direction = sqrt(pow(modelAzimuth,2) + pow(modelAltitude,2));
+    //float direction = sqrt(pow(modelAzimuth,2) + pow(modelAltitude,2));
     
     SetCharacterOrientation(modelAzimuth);
     
