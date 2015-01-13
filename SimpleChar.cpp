@@ -261,6 +261,8 @@ Game::Game() :
     
 
 	soldierController = nullptr;
+	
+	MainWindow::Open();
 }
 
 Game::~Game()
