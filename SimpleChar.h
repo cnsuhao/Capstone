@@ -119,6 +119,8 @@ namespace C4
 
 			//ModelRegistration				soldierModelReg;
 			LocatorRegistration				locatorReg;
+        
+        	ModelRegistration				ballModelReg;
 
 			void							*prevEscapeData;
 			InputMgr::KeyProc				*prevEscapeProc;
@@ -134,6 +136,8 @@ namespace C4
 			MovementAction					*upAction;
 			MovementAction					*downAction;
 			UseAction						*useAction;
+        
+        	FireAction						*fireAction;
 
 			SoldierController				*soldierController;
 			SpinController					*spinController;

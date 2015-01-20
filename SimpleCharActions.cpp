@@ -21,6 +21,7 @@
 #include "SimpleCharMultiplayer.h"
 #include "SimpleCharSoldier.h"
 #include "SimpleChar.h"
+#include "SimpleCharControllers.h"
 
 using namespace C4;
 
@@ -50,33 +51,7 @@ void MovementAction::Begin(void)
             TheMessageMgr->SendMessage(kPlayerServer, message);
             return;
         }
-    }/*
-    if (TheMessageMgr->Server())
-    {
-        SoldierController *controller = TheGame->GetSoldierController();
-        if (controller)
-        {
-            controller->SetMovementFlags(controller->GetMovementFlags() | movementFlag);
-            
-            ClientMovementMessage message(kMessageMovementBegin, movementFlag);
-            TheMessageMgr->SendMessage(kPlayerServer, message);
-            return;
-        }
     }
-    else{
-        const Player *player = TheMessageMgr->GetLocalPlayer();
-        if (player)
-        {
-            const SoldierController *controller = static_cast<const GamePlayer *>(player)->GetController();
-            if (controller)
-            {
-                ClientMovementMessage message(kMessageMovementBegin, movementFlag);
-                TheMessageMgr->SendMessage(kPlayerServer, message);
-                return;
-            }
-        }
-    }*/
-    
 }
 
 void MovementAction::End(void)
@@ -91,31 +66,79 @@ void MovementAction::End(void)
             TheMessageMgr->SendMessage(kPlayerServer, message);
             return;
         }
-    }/*
-    if (TheMessageMgr->Server())
+    }
+}
+
+FireAction::FireAction() : Action(kActionFire)
+{
+}
+
+FireAction::~FireAction()
+{
+}
+
+void FireAction::Begin(void)
+{
+    const Player *player = TheMessageMgr->GetLocalPlayer();
+    if (player)
     {
-        SoldierController *controller = TheGame->GetSoldierController();
+        const SoldierController *controller = static_cast<const GamePlayer *>(player)->GetController();
         if (controller)
         {
-            controller->SetMovementFlags(controller->GetMovementFlags() & ~movementFlag);
-            ClientMovementMessage message(kMessageMovementEnd, movementFlag);
-            TheMessageMgr->SendMessage(kPlayerServer, message);
+            
+                
+                GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
+                
+                Controller *controller1;
+                Model *model1 = nullptr;
+                Point3D zonePosition;
+                float speed = 20.0F;// increase or decrease to change the speed
+            	float azimuth = controller->GetModelAzimuth();
+            
+            	Vector3D direction = *new Vector3D(cos(azimuth), sin(azimuth), 0.0f);
+                Point3D startPos = controller->GetTargetNode()->GetWorldPosition() + Point3D(0.0F,0.0F,1.0F);
+				
+                direction = direction*speed;
+
+                controller1 = new BallController(direction);
+                model1 = Model::Get(kModelBall);
+                if (model1)
+                {
+                    {
+                        model1->SetController(controller1);
+                        
+                        zonePosition = startPos;
+                        model1->SetNodePosition(zonePosition);
+                        
+                        OmniSource *source = new OmniSource("model/Ball", 40.0F);
+                        source->SetNodePosition(zonePosition);
+                        
+                        world->AddNewNode(source);
+                        world->AddNewNode(model1);
+                        model1->Update();
+                        
+                    }
+                    
+                }
+            
+            
             return;
         }
     }
-    else{
-        const Player *player = TheMessageMgr->GetLocalPlayer();
-        if (player)
+}
+
+void FireAction::End(void)
+{
+    const Player *player = TheMessageMgr->GetLocalPlayer();
+    if (player)
+    {
+        const SoldierController *controller = static_cast<const GamePlayer *>(player)->GetController();
+        if (controller)
         {
-            const SoldierController *controller = static_cast<const GamePlayer *>(player)->GetController();
-            if (controller)
-            {
-                ClientMovementMessage message(kMessageMovementEnd, movementFlag);
-                TheMessageMgr->SendMessage(kPlayerServer, message);
-                return;
-            }
+            
+            return;
         }
-    }*/
+    }
 }
 
 UseAction::UseAction() : Action(kActionUse)

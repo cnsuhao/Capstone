@@ -181,6 +181,7 @@ Game::Game() :
 
 
 		spinControllerReg(kControllerSpin, "Spin"),
+		ballModelReg(kModelBall, "Bouncing Ball", "model/Ball", kModelPrecache, kControllerBall),
 
 		// Locator markers are registered so that the World Editor
 		// can display their names in the Get Info dialog box.
@@ -230,6 +231,8 @@ Game::Game() :
 	upAction = new MovementAction(kActionUp, kMovementUp);
 	downAction = new MovementAction(kActionDown, kMovementDown);
 	useAction = new UseAction;
+    
+    fireAction = new FireAction;
 
 	prevEscapeProc = TheInputMgr->GetEscapeProc();
 	prevEscapeData = TheInputMgr->GetEscapeCookie();
@@ -244,6 +247,8 @@ Game::Game() :
 	TheInputMgr->AddAction(upAction);
 	TheInputMgr->AddAction(downAction);
 	TheInputMgr->AddAction(useAction);
+    
+    TheInputMgr->AddAction(fireAction);
 
 	// Let the Interface Manager determine when to change input devices to gameplay mode.
 
@@ -271,7 +276,8 @@ Game::~Game()
 	TheWorldMgr->UnloadWorld();
 	TheWorldMgr->SetWorldConstructor(nullptr);
     
-
+    Soldier::Destruct();
+    
 	delete useAction;
 	delete downAction;
 	delete upAction;

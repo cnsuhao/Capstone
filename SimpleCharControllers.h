@@ -21,6 +21,11 @@ namespace C4
 	{
 		kControllerSpin = 'spin'
 	};
+    
+    enum
+    {
+        kControllerBall			= 'ball'
+    };
 
 	class SpinController;
 
@@ -87,6 +92,27 @@ namespace C4
 		// The function that moves the target node
 		void Move(void);
 	};
+    
+    class BallController : public RigidBodyController
+    {
+    private:
+        
+        BallController(const BallController& ballController);
+        
+        Controller *Replicate(void) const override;
+        
+    public:
+        
+        BallController();
+        BallController(Vector3D& velocity);
+        ~BallController();
+        
+        static bool ValidNode(const Node *node);
+        
+        void Preprocess(void) override;
+        
+        RigidBodyStatus HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody);
+    };
 
 }
 

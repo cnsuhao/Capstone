@@ -12,8 +12,12 @@
 #include "SimpleCharControllers.h"
 #include "SimpleCharMultiplayer.h"
 
+#include "SimpleChar.h"
+
 using namespace C4;
 
+Vector3D ballVelocity = Vector3D(0.0f,0.0f,0.0f);//projectile velocity
+float speed = 20.0F;//projectile initial speed
 
 SpinController::SpinController() : Controller(kControllerSpin)
 {
@@ -162,4 +166,90 @@ void SpinController::Move(void)
 
 	// Invalidate the target node so that it gets updated properly
 	target->Invalidate();
+}
+
+BallController::BallController() : RigidBodyController(kControllerBall)
+{
+    // This constructor is only called when a new ball model is created.
+}
+
+BallController::BallController(Vector3D& velocity) : RigidBodyController(kControllerBall)
+{
+    ballVelocity = velocity;
+    // This constructor is  called when a new ball model is created with an initial velocity
+}
+
+BallController::BallController(const BallController& ballController) : RigidBodyController(ballController)
+{
+    // This constructor is called when a ball controller is cloned.
+}
+
+BallController::~BallController()
+{
+}
+
+Controller *BallController::Replicate(void) const
+{
+    return (new BallController(*this));
+}
+
+bool BallController::ValidNode(const Node *node)
+{
+    // This function is called by the engine to determine whether
+    // this particular type of controller can control the particular
+    // node passed in through the node parameter. This function should
+    // return true if it can control the node, and otherwise it should
+    // return false. In this case, the controller can only be applied
+    // to model nodes.
+    
+    return (node->GetNodeType() == kNodeModel);
+}
+
+void BallController::Preprocess(void)
+{
+    // This function is called once before the target node is ever
+    // rendered or moved. The base class Preprocess() function should
+    // always be called first, and then the subclass can do whatever
+    // preprocessing it needs to do. In this case, we set the ball's
+    // coefficient of restitution.
+    
+    RigidBodyController::Preprocess();
+    
+    SetGravityMultiplier(0.1F);
+    //GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
+    //Vector3D direction = world->GetCamera()->GetNodeTransform()[2];
+    //Matrix3D cameraMatrix3D = world->GetCamera()->GetNodeTransform().GetMatrix3D();
+    
+    Model *model = static_cast<Model *>(Controller::GetTargetNode());
+    
+    //SetRigidBodyTransform(Transform4D(cameraMatrix3D, model->GetNodePosition()));
+    
+    model->Invalidate();
+    SetRestitutionCoefficient(0.95F);
+    SetLinearVelocity(ballVelocity);
+
+}
+
+RigidBodyStatus BallController::HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody)
+{
+    // This function is called when the ball makes contact with another rigid body.
+    /*
+    if (contactBody->GetControllerType() == kControllerBall)
+    {
+        // Add a sound effect and some sparks to the world.
+        
+        Node *node = GetTargetNode();
+        World *world = node->GetWorld();
+        Point3D position = node->GetWorldTransform() * contact->GetContactPosition();
+        
+        OmniSource *source = new OmniSource("model/Ball", 40.0F);
+        source->SetNodePosition(position);
+        world->AddNewNode(source);
+        
+        //SparkParticleSystem *sparks = new SparkParticleSystem(20);
+        //sparks->SetNodePosition(position);
+        //world->AddNewNode(sparks);
+    }*/
+    
+    return (kRigidBodyUnchanged);
 }

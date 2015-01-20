@@ -35,7 +35,13 @@ namespace C4
         kActionRight			= 'rght',
         kActionUp				= 'jump',
         kActionDown				= 'down',
-        kActionUse				= 'fire'
+        kActionUse				= 'fire',
+        kActionFire				= 'uobj'
+    };
+    
+    enum
+    {
+        kModelBall				= 'ball'
     };
     
     // An Action object represents an input action that can be triggered by
@@ -54,6 +60,17 @@ namespace C4
         
         MovementAction(unsigned_int32 type, unsigned_int32 flag);
         ~MovementAction();
+        
+        void Begin(void);
+        void End(void);
+    };
+    
+    class FireAction : public Action
+    {
+    public:
+        
+        FireAction();
+        ~FireAction();
         
         void Begin(void);
         void End(void);
