@@ -316,32 +316,6 @@ void SoldierController::SetSoldierMotion(int32 motion)
     soldierMotion = motion;
 }
 
-//void SoldierController::SetSoldierMotion(int32 motion)
-//{
-//	// This function sets the animation resource corresponding to
-//	// the current type of motion assigned to the soldier.
-//
-//	Interpolator *interpolator = frameAnimator.GetFrameInterpolator();
-//
-//	if (motion == kMotionStand)
-//	{
-//		frameAnimator.SetAnimation("soldier/Stand");
-//		interpolator->SetMode(kInterpolatorForward | kInterpolatorLoop);
-//	}
-//	else if (motion == kMotionForward)
-//	{
-//		frameAnimator.SetAnimation("soldier/Run");
-//		interpolator->SetMode(kInterpolatorForward | kInterpolatorLoop);
-//	}
-//	else if (motion == kMotionBackward)
-//	{
-//		frameAnimator.SetAnimation("soldier/Backward");
-//		interpolator->SetMode(kInterpolatorForward | kInterpolatorLoop);
-//	}
-//
-//	soldierMotion = motion;
-//}
-
 void SoldierController::ReceiveMessage(const ControllerMessage *message)
 {
     switch (message->GetControllerMessageType())
@@ -381,6 +355,15 @@ void SoldierController::ReceiveMessage(const ControllerMessage *message)
             }
             break;
         }
+        case kSoldierMessageFired:
+        {
+            
+            const SoldierFiredMessage *m = static_cast<const SoldierFiredMessage *>(message);
+            //ballAzimuth = m->GetAzimuth();
+            //ballPosition = m->GeetPosition();
+            TheGame->CreateBall(m->GetAzimuth(), m->GetPosition());
+            break;
+        }
     }
     
     CharacterController::ReceiveMessage(message);
@@ -402,6 +385,11 @@ ControllerMessage *SoldierController::ConstructMessage(ControllerMessageType typ
         case kSoldierMessageOrientation:
             
             return (new SoldierOrientationMessage(GetControllerIndex()));
+            
+        case kSoldierMessageFired:
+            
+            return (new SoldierFiredMessage(GetControllerIndex()));
+
     }
     return (CharacterController::ConstructMessage(type));
 }
@@ -436,6 +424,12 @@ void SoldierController::EndMovement(unsigned long flag)
 void SoldierController::BeginOrientation(float orientation)
 {
     SoldierOrientationMessage message(GetControllerIndex(), orientation);
+    TheMessageMgr->SendMessageAll(message);
+}
+
+void SoldierController::BeginFiring(float azimuth, Point3D position)
+{
+    SoldierFiredMessage message(GetControllerIndex(), azimuth, position);
     TheMessageMgr->SendMessageAll(message);
 }
 
@@ -577,3 +571,36 @@ bool SoldierOrientationMessage::Decompress(Decompressor& data)
     return (false);
 }
 
+SoldierFiredMessage::SoldierFiredMessage(long contIndex) : ControllerMessage(SoldierController::kSoldierMessageFired, contIndex)
+{
+}
+
+SoldierFiredMessage::SoldierFiredMessage(long contIndex, float _azimuth, Point3D _position) : ControllerMessage(SoldierController::kSoldierMessageFired, contIndex)
+{
+    azimuth = _azimuth;
+    position = _position;
+}
+
+SoldierFiredMessage::~SoldierFiredMessage()
+{
+}
+
+void SoldierFiredMessage::Compress(Compressor& data) const
+{
+    ControllerMessage::Compress(data);
+    
+    data << azimuth;
+    data << position;
+}
+
+bool SoldierFiredMessage::Decompress(Decompressor& data)
+{
+    if (ControllerMessage::Decompress(data))
+    {
+        data >> azimuth;
+        data >> position;
+        return (true);
+    }
+    
+    return (false);
+}

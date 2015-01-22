@@ -153,3 +153,39 @@ bool ClientOrientationMessage::HandleMessage(Player *sender) const
 
 	return (true);
 }
+
+ClientFiringMessage::ClientFiringMessage(void) : Message(kMessageFired)
+{
+}
+
+ClientFiringMessage::ClientFiringMessage(float azimuth) : Message(kMessageFired)
+{
+    firingAzimuth = azimuth;
+}
+
+ClientFiringMessage::~ClientFiringMessage()
+{
+}
+
+void ClientFiringMessage::Compress(Compressor& data) const
+{
+    data << firingAzimuth;
+}
+
+bool ClientFiringMessage::Decompress(Decompressor& data)
+{
+    data >> firingAzimuth;
+    return (true);
+}
+
+bool ClientFiringMessage::HandleMessage(Player *sender) const
+{
+    GamePlayer *player = static_cast<GamePlayer *>(sender);
+    SoldierController *controller = player->GetController();
+    if (controller)
+    {
+       controller->BeginFiring(GetFiringAzimuth(), controller->GetTargetNode()->GetWorldPosition());
+    }
+    
+    return (true);
+}

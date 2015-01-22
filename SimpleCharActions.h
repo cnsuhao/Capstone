@@ -73,7 +73,7 @@ namespace C4
         ~FireAction();
         
         void Begin(void);
-        void End(void);
+        //void End(void);
     };
     
     

@@ -86,7 +86,9 @@ void FireAction::Begin(void)
         if (controller)
         {
             
-                
+            TheMessageMgr->SendMessage(kPlayerServer, ClientFiringMessage(controller->GetModelAzimuth()));
+            return;
+            /*
                 GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
                 
                 Controller *controller1;
@@ -122,21 +124,7 @@ void FireAction::Begin(void)
                 }
             
             
-            return;
-        }
-    }
-}
-
-void FireAction::End(void)
-{
-    const Player *player = TheMessageMgr->GetLocalPlayer();
-    if (player)
-    {
-        const SoldierController *controller = static_cast<const GamePlayer *>(player)->GetController();
-        if (controller)
-        {
-            
-            return;
+            return;*/
         }
     }
 }

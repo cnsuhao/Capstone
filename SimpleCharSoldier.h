@@ -184,6 +184,7 @@ namespace C4
         void BeginMovement(unsigned long flag);
         void EndMovement(unsigned long flag);
         void BeginOrientation(float orientation);
+        void BeginFiring(float azimuth, Point3D position);
         
         void ReceiveMessage(const ControllerMessage *message);
         ControllerMessage *ConstructMessage(ControllerMessageType type) const;
@@ -194,7 +195,8 @@ namespace C4
             kSoldierMessageEndMovement,
             kSoldierMessageState,
             kSoldierMessageDestroy,
-            kSoldierMessageOrientation
+            kSoldierMessageOrientation,
+            kSoldierMessageFired
         };
     };
     
@@ -300,6 +302,33 @@ namespace C4
         float GetOrientation(void) const
         {
             return orientation;
+        }
+        
+        void Compress(Compressor& data) const;
+        bool Decompress(Decompressor& data);
+    };
+    
+    class SoldierFiredMessage : public ControllerMessage
+    {
+    private:
+        
+        float azimuth;
+        Point3D position;
+        
+    public:
+        
+        SoldierFiredMessage(long contIndex);
+        SoldierFiredMessage(long contIndex, float _azimuth, Point3D _position);
+        ~SoldierFiredMessage();
+        
+        float GetAzimuth(void) const
+        {
+            return azimuth;
+        }
+        
+        Point3D GetPosition(void) const
+        {
+            return position;
         }
         
         void Compress(Compressor& data) const;

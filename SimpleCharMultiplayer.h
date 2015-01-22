@@ -29,7 +29,8 @@ namespace C4
 		kMessageRequest,
 		kMessageMovementBegin,
 		kMessageMovementEnd,
-		kMessageOrientation
+		kMessageOrientation,
+        kMessageFired
 	};
 
 	class GamePlayer : public Player
@@ -142,6 +143,32 @@ namespace C4
 
 		bool HandleMessage(Player *sender) const;
 	};
+    
+    class ClientFiringMessage : public Message
+    {
+        friend class Game;
+        
+    private:
+        
+        float		firingAzimuth;
+        
+        ClientFiringMessage(void);
+        
+    public:
+        
+        ClientFiringMessage(float azimuth);
+        ~ClientFiringMessage();
+        
+        float GetFiringAzimuth(void) const
+        {
+            return (firingAzimuth);
+        }
+        
+        void Compress(Compressor& data) const override;
+        bool Decompress(Decompressor& data) override;
+        
+        bool HandleMessage(Player *sender) const override;
+    };
 }
 
 

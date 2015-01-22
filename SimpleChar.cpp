@@ -113,6 +113,8 @@ WorldResult GameWorld::Preprocess(void)
 	{
 		return (result);
 	}
+    
+    SetCamera(&chaseCamera);
 
 	// The world is now completely loaded. We search for a locator node that represents the
 	// player's spawn position. It has a locator type of kLocatorSpawn.
@@ -365,9 +367,9 @@ EngineResult Game::LoadWorld(const char *name)
                 // Set the world's current camera to be our chase camera.
                 // The world will not render without a camera being set.
                 
-                ChaseCamera *camera = world->GetChaseCamera();
+                //ChaseCamera *camera = world->GetChaseCamera();
                 //camera->SetTargetModel(model);
-                world->SetCamera(camera);
+                //world->SetCamera(camera);
                 
                 //TheMessageMgr->SendMessageAll(RequestMessage());
                 
@@ -404,6 +406,7 @@ void Game::ReceiveMessage(Player *sender, const NetworkAddress &address, const M
 		}
 		break;
 	}
+
 	}
 }
 
@@ -430,6 +433,10 @@ Message *Game::ConstructMessage(MessageType type, Decompressor &data) const
         case kMessageOrientation:
             
             return (new ClientOrientationMessage);
+            
+        case kMessageFired:
+            
+            return (new ClientFiringMessage(type));
 	}
 
 	return nullptr;
@@ -465,19 +472,6 @@ void Game::HandlecJoinCommand(Command *command, const char *text)
 
 void Game::HandleHostCommand(Command *command, const char *text)
 {
-    /*
-    TheNetworkMgr->SetPortNumber(kGamePort);
-    TheNetworkMgr->SetBroadcastPortNumber(kGamePort);
-
-    TheMessageMgr->BeginMultiplayerGame(true);
-    TheEngine->Report(String<>("Initialized. Hosting on: ") + MessageMgr::AddressToString(TheNetworkMgr->GetLocalAddress(), true));
-    
-    currentWorldName = text;
-    
-    TheGame->LoadWorld(text);
-    
-    //TheMessageMgr->SendMessageAll(RequestMessage());*/
-    
     if (*text != 0)
     {
         ResourceName	name;
@@ -519,12 +513,17 @@ EngineResult Game::HostMultiplayerGame(const char *name, unsigned_int32 flags)
 
 void Game::HandleJoinCommand(Command *command, const char *text)
 {
-    TheGame->LoadWorld("world/inout");
+    
     
     TheMessageMgr->BeginMultiplayerGame(false);
     // We'll first want to provide the user with some feedback - so he'll know what he's doing.
     String<128> str("Attempting to join --> ");
     str += text;
+    
+    
+    
+    //TheGame->LoadWorld("planetarena");
+    TheWorldMgr->LoadWorld("planetarena");
     
     TheEngine->Report(str, kReportError);
     
@@ -694,6 +693,45 @@ void Game::SpawnSoldier(Player *player, Point3D location, int32 controllerIndex)
     }
     
     TheEngine->Report("Soldier Spawned.");
+}
+
+void Game::CreateBall(float azimuth, Point3D position)
+{
+    GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
+    
+    Controller *controller1;
+    Model *model1 = nullptr;
+    Point3D zonePosition;
+    float speed = 20.0F;// increase or decrease to change the speed
+    //float azimuth = azimuth;
+    
+    Vector3D direction = *new Vector3D(cos(azimuth), sin(azimuth), 0.0f);
+    
+    //Point3D startPos = controller->GetTargetNode()->GetWorldPosition() + Point3D(0.0F,0.0F,1.0F);
+    Point3D startPos = position + Point3D(0.0F,0.0F,1.0F);
+    
+    direction = direction*speed;
+    
+    controller1 = new BallController(direction);
+    model1 = Model::Get(kModelBall);
+    if (model1)
+    {
+        {
+            model1->SetController(controller1);
+            
+            zonePosition = startPos;
+            model1->SetNodePosition(zonePosition);
+            
+            OmniSource *source = new OmniSource("model/Ball", 40.0F);
+            source->SetNodePosition(zonePosition);
+            
+            world->AddNewNode(source);
+            world->AddNewNode(model1);
+            model1->Update();
+            
+        }
+        
+    }
 }
 
 

@@ -200,6 +200,8 @@ namespace C4
 			void HandleConnectionEvent(ConnectionEvent event, const NetworkAddress& address, const void *param);
 
 			void SpawnSoldier(Player *player, Point3D location, int32 controllerIndex);
+        
+        	void CreateBall(float azimuth, Point3D position);
 
 			void HostGame();
 			void JoinGame(String<> ipAddress);

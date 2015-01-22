@@ -101,18 +101,35 @@ namespace C4
         
         Controller *Replicate(void) const override;
         
+        float				ballAzimuth;
+        Point3D				ballPosition;
+        
     public:
         
         BallController();
         BallController(Vector3D& velocity);
         ~BallController();
         
+        void CreateBall(float azimuth, Point3D position);
+        
         static bool ValidNode(const Node *node);
         
         void Preprocess(void) override;
         
+        void BeginCreation(float azimuth, Point3D position);
+        
+        void ReceiveMessage(const ControllerMessage *message);
+        ControllerMessage *ConstructMessage(ControllerMessageType type) const;
+        
         RigidBodyStatus HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody);
+        
+        enum
+        {
+            kBallMessageFired
+        };
     };
+    
+    
 
 }
 

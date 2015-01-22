@@ -230,6 +230,76 @@ void BallController::Preprocess(void)
 
 }
 
+
+
+void BallController::ReceiveMessage(const ControllerMessage *message)
+{
+    switch (message->GetControllerMessageType())
+    {
+        case kMessageFired:
+        {/*
+            
+            const BallCreateMessage *m = static_cast<const BallCreateMessage *>(message);
+            ballAzimuth = m->GetAzimuth();
+            ballPosition = m->GetPosition();
+            CreateBall(ballAzimuth, ballPosition);*/
+            break;
+        }
+    }
+    
+}
+
+ControllerMessage *BallController::ConstructMessage(ControllerMessageType type) const
+{
+    switch (type)
+    {
+        case kBallMessageFired:;
+            
+            //return (new BallCreateMessage(GetControllerIndex()));
+    }
+    return nullptr;
+}
+
+void BallController::CreateBall(float azimuth, Point3D position)
+{
+    GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
+    
+    Controller *controller1;
+    Model *model1 = nullptr;
+    Point3D zonePosition;
+    float speed = 20.0F;// increase or decrease to change the speed
+    //float azimuth = azimuth;
+    
+    Vector3D direction = *new Vector3D(cos(azimuth), sin(azimuth), 0.0f);
+    
+    //Point3D startPos = controller->GetTargetNode()->GetWorldPosition() + Point3D(0.0F,0.0F,1.0F);
+    Point3D startPos = position + Point3D(0.0F,0.0F,1.0F);
+    
+    direction = direction*speed;
+    
+    controller1 = new BallController(direction);
+    model1 = Model::Get(kModelBall);
+    if (model1)
+    {
+        {
+            model1->SetController(controller1);
+            
+            zonePosition = startPos;
+            model1->SetNodePosition(zonePosition);
+            
+            OmniSource *source = new OmniSource("model/Ball", 40.0F);
+            source->SetNodePosition(zonePosition);
+            
+            world->AddNewNode(source);
+            world->AddNewNode(model1);
+            model1->Update();
+            
+        }
+        
+    }
+}
+
+
 RigidBodyStatus BallController::HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody)
 {
     // This function is called when the ball makes contact with another rigid body.
