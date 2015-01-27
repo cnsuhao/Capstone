@@ -26,12 +26,13 @@
 #include "C4Logo.h"
 #include "C4Markings.h"
 #include "C4Adjusters.h"
+#include "C4Particles.h""
 
 #include "SimpleCharControllers.h"
 #include "SimpleCharSoldier.h"
 #include "SimpleCharActions.h"
 #include "SimpleCharCamera.h"
-
+#include "SimpleCharMultiplayer.h"
 
 // Every application/game module needs to declare a function called ConstructApplication()
 // exactly as follows. (It must be declared extern "C", and it must include the tag C4MODULEEXPORT.)
@@ -45,14 +46,14 @@ extern "C"
 
 namespace C4
 {
-	
+
 
 	// Model types are associated with a model resource using the ModelRegistration
 	// class. Models are registered with the engine in the Game constructor.
 
 	enum
 	{
-		kModelSoldier			= 'sold'
+		kModelSoldier = 'sold'
 	};
 
 
@@ -63,7 +64,7 @@ namespace C4
 
 	enum
 	{
-		kLocatorSpawn			= 'spwn'
+		kLocatorSpawn = 'spwn'
 	};
 
 
@@ -75,33 +76,33 @@ namespace C4
 
 	class GameWorld : public World
 	{
-		private:
+	private:
 
-			const LocatorMarker		*spawnLocator;
+		const LocatorMarker		*spawnLocator;
 
-			ChaseCamera				chaseCamera;
+		ChaseCamera				chaseCamera;
 
-			static const LocatorMarker *FindSpawnLocator(const Zone *zone);
+		static const LocatorMarker *FindSpawnLocator(const Zone *zone);
 
-		public:
+	public:
 
-			GameWorld(const char *name);
-			~GameWorld();
+		GameWorld(const char *name);
+		~GameWorld();
 
-			const LocatorMarker *GetSpawnLocator(void) const
-			{
-				return (spawnLocator);
-			}
+		const LocatorMarker *GetSpawnLocator(void) const
+		{
+			return (spawnLocator);
+		}
 
-			ChaseCamera *GetChaseCamera(void)
-			{
-				return (&chaseCamera);
-			}
+		ChaseCamera *GetChaseCamera(void)
+		{
+			return (&chaseCamera);
+		}
 
-			ResourceResult Preprocess(void);
+		ResourceResult Preprocess(void);
 
-			void Interact(void);
-			void Render(void);
+		void Interact(void);
+		void Render(void);
 	};
 
 
@@ -113,111 +114,115 @@ namespace C4
 
 	class Game : public Application, public Singleton<Game>
 	{
-		private:
+	private:
 
-			DisplayEventHandler				displayEventHandler;
+		DisplayEventHandler				displayEventHandler;
 
-			//ModelRegistration				soldierModelReg;
-			LocatorRegistration				locatorReg;
-        
-        	ModelRegistration				ballModelReg;
+		//ModelRegistration				soldierModelReg;
+		LocatorRegistration				locatorReg;
 
-			void							*prevEscapeData;
-			InputMgr::KeyProc				*prevEscapeProc;
-			void							*prevEscapeCookie;
-
-			// Define the controller registration
-			ControllerReg<SpinController>	spinControllerReg;
-
-			MovementAction					*forwardAction;
-			MovementAction					*backwardAction;
-			MovementAction					*leftAction;
-			MovementAction					*rightAction;
-			MovementAction					*upAction;
-			MovementAction					*downAction;
-			UseAction						*useAction;
-        
-        	FireAction						*fireAction;
-
-			SoldierController				*soldierController;
-			SpinController					*spinController;
-
-			
-			CommandObserver<Game>							serverCommandObserver;
-			CommandObserver<Game>							joinCommandObserver;
-			CommandObserver<Game>							cjoinCommandObserver;
-			CommandObserver<Game>							hostCommandObserver;
-
-			// The server command will start a new server
-			Command							serverCommand;
-			// The join command will join an existing game.
-			Command							joinCommand;
-			Command							cjoinCommand;
-
-			Command							hostCommand;
-
-			//static World *ConstructWorld(const char *name, void *cookie);
-        
-            ResourceName									currentWorldName;
-
-			
-
-			static void HandleDisplayEvent(const DisplayEventData *eventData, void *cookie);
+		ModelRegistration				ballModelReg;
+		//ControllerReg<BallController>	controllerReg;//new
+		//ParticleSystemReg<SparkParticleSystem>	sparkSystemReg;//new
 
 
-			//static void EscapeProc(void *cookie);
+		void							*prevEscapeData;
+		InputMgr::KeyProc				*prevEscapeProc;
+		void							*prevEscapeCookie;
 
-		public:
+		// Define the controller registration
+		ControllerReg<SpinController>	spinControllerReg;
 
-			Game();
-			~Game();
+		MovementAction					*forwardAction;
+		MovementAction					*backwardAction;
+		MovementAction					*leftAction;
+		MovementAction					*rightAction;
+		MovementAction					*upAction;
+		MovementAction					*downAction;
+		UseAction						*useAction;
 
-			SoldierController *GetSoldierController(void) const
-			{
-				return (soldierController);
-			}
+		FireAction						*fireAction;
 
-			SpinController *GetSpinController(void) const
-			{
-				return (spinController);
-			}
+		SoldierController				*soldierController;
+		SpinController					*spinController;
 
-			// This method will be executed whenever the user uses the server command.
-			void HandleServerCommand(Command *command, const char *text);
 
-			// This method will be executed whenever the user uses the join command.
-			void HandleJoinCommand(Command *command, const char *text);
-			void HandlecJoinCommand(Command *command, const char *text);
+		CommandObserver<Game>							serverCommandObserver;
+		CommandObserver<Game>							joinCommandObserver;
+		CommandObserver<Game>							cjoinCommandObserver;
+		CommandObserver<Game>							hostCommandObserver;
 
-			void HandleHostCommand(Command *command, const char *text);
-        
-            EngineResult HostMultiplayerGame(const char *name, unsigned_int32 flags);
-            EngineResult JoinMultiplayerGame(const char *name, unsigned_int32 flags);
+		// The server command will start a new server
+		Command							serverCommand;
+		// The join command will join an existing game.
+		Command							joinCommand;
+		Command							cjoinCommand;
 
-			// This method will be called by the engine whenever a chat is received.
-			// It's used for a lot of other stuff, but that's outside the scope of this tutorial.
-			void HandlePlayerEvent(PlayerEvent event, Player *player, const void *param) override;
-			void HandleConnectionEvent(ConnectionEvent event, const NetworkAddress& address, const void *param);
+		Command							hostCommand;
 
-			void SpawnSoldier(Player *player, Point3D location, int32 controllerIndex);
-        
-        	void CreateBall(float azimuth, Point3D position);
+		//static World *ConstructWorld(const char *name, void *cookie);
 
-			void HostGame();
-			void JoinGame(String<> ipAddress);
-			void QuitGame();
+		ResourceName									currentWorldName;
 
-			Message *ConstructMessage(MessageType type, Decompressor &data) const;
-			void ReceiveMessage(Player *sender, const NetworkAddress &address, const Message *message);
 
-			static World *ConstructWorld(const char *name, void *data);
-			static Player *ConstructPlayer(PlayerKey key, void *data);
-			static void EscapeProc(void *data);
 
-			EngineResult LoadWorld(const char *name) override;
-			void UnloadWorld(void) override;
+		static void HandleDisplayEvent(const DisplayEventData *eventData, void *cookie);
+
+
+		//static void EscapeProc(void *cookie);
+
+	public:
+
+		Game();
+		~Game();
+
+		SoldierController *GetSoldierController(void) const
+		{
+			return (soldierController);
+		}
+
+		SpinController *GetSpinController(void) const
+		{
+			return (spinController);
+		}
+
+		// This method will be executed whenever the user uses the server command.
+		void HandleServerCommand(Command *command, const char *text);
+
+		// This method will be executed whenever the user uses the join command.
+		void HandleJoinCommand(Command *command, const char *text);
+		void HandlecJoinCommand(Command *command, const char *text);
+
+		void HandleHostCommand(Command *command, const char *text);
+
+		EngineResult HostMultiplayerGame(const char *name, unsigned_int32 flags);
+		EngineResult JoinMultiplayerGame(const char *name, unsigned_int32 flags);
+
+		// This method will be called by the engine whenever a chat is received.
+		// It's used for a lot of other stuff, but that's outside the scope of this tutorial.
+		void HandlePlayerEvent(PlayerEvent event, Player *player, const void *param) override;
+		void HandleConnectionEvent(ConnectionEvent event, const NetworkAddress& address, const void *param);
+
+		void SpawnSoldier(Player *player, Point3D location, int32 controllerIndex);
+
+		void CreateBall(GamePlayer *sender, float azimuth, Point3D position);
+
+		void HostGame();
+		void JoinGame(String<> ipAddress);
+		void QuitGame();
+
+		Message *ConstructMessage(MessageType type, Decompressor &data) const;
+		void ReceiveMessage(Player *sender, const NetworkAddress &address, const Message *message);
+
+		static World *ConstructWorld(const char *name, void *data);
+		static Player *ConstructPlayer(PlayerKey key, void *data);
+		static void EscapeProc(void *data);
+
+		EngineResult LoadWorld(const char *name) override;
+		void UnloadWorld(void) override;
 	};
 
+	
 
 	// This is a pointer to the one instance of the Game class through which
 	// any other part of the application/game module can access it.

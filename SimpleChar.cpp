@@ -20,6 +20,8 @@
 #include "SimpleCharSoldier.h"
 #include "SimpleCharActions.h"
 #include "SimpleCharCamera.h"
+#include "math.h"
+
 
 using namespace C4;
 
@@ -113,8 +115,8 @@ WorldResult GameWorld::Preprocess(void)
 	{
 		return (result);
 	}
-    
-    SetCamera(&chaseCamera);
+
+	SetCamera(&chaseCamera);
 
 	// The world is now completely loaded. We search for a locator node that represents the
 	// player's spawn position. It has a locator type of kLocatorSpawn.
@@ -158,47 +160,48 @@ void GameWorld::Render(void)
 
 Game::Game() :
 
-		// This is the constructor for the main application/game module class.
-		// This class is constructed by the ConstructApplication() function,
-		// which is called right after the application/game DLL is loaded by
-		// the engine. There is only one instance of this class, so it inherits
-		// from the Singleton template, which we initialize first.
+// This is the constructor for the main application/game module class.
+// This class is constructed by the ConstructApplication() function,
+// which is called right after the application/game DLL is loaded by
+// the engine. There is only one instance of this class, so it inherits
+// from the Singleton template, which we initialize first.
 
-		Singleton<Game>(TheGame),
+Singleton<Game>(TheGame),
 
-		// The display event handler encapsulates a function that gets called
-		// when the Display Manager changes something like the screen resolution.
+// The display event handler encapsulates a function that gets called
+// when the Display Manager changes something like the screen resolution.
 
-		displayEventHandler(&HandleDisplayEvent),
+displayEventHandler(&HandleDisplayEvent),
 
-		// A model registration represents a model that can be instanced.
-		// This particular declaration associates the kModelSoldier type with the
-		// model named "Data/*/soldier/Soldier.mdl". The fourth parameter tells the
-		// engine to pre-cache the model resource and not to display the model in
-		// the World Editor. The last parameter specifies the default controller
-		// type to assign to models of type kModelSoldier.
+// A model registration represents a model that can be instanced.
+// This particular declaration associates the kModelSoldier type with the
+// model named "Data/*/soldier/Soldier.mdl". The fourth parameter tells the
+// engine to pre-cache the model resource and not to display the model in
+// the World Editor. The last parameter specifies the default controller
+// type to assign to models of type kModelSoldier.
 
-		//soldierModelReg(kModelSoldier, nullptr, "soldier/Soldier", kModelPrecache | kModelPrivate, kControllerSoldier),
-        //soldierModelReg(kModelSoldier, nullptr, "model/duck", kModelPrecache | kModelPrivate, kControllerSoldier),
+//soldierModelReg(kModelSoldier, nullptr, "soldier/Soldier", kModelPrecache | kModelPrivate, kControllerSoldier),
+//soldierModelReg(kModelSoldier, nullptr, "model/duck", kModelPrecache | kModelPrivate, kControllerSoldier),
 
 
-		spinControllerReg(kControllerSpin, "Spin"),
-		ballModelReg(kModelBall, "Bouncing Ball", "model/Ball", kModelPrecache, kControllerBall),
+spinControllerReg(kControllerSpin, "Spin"),
+ballModelReg(kModelBall, "Bouncing Ball", "model/Ball", kModelPrecache, kControllerBall),
+//controllerReg(kControllerBall, "Bouncing Ball"),
+//sparkSystemReg(kParticleSystemSpark, "Sparks"),
+// Locator markers are registered so that the World Editor
+// can display their names in the Get Info dialog box.
 
-		// Locator markers are registered so that the World Editor
-		// can display their names in the Get Info dialog box.
+locatorReg(kLocatorSpawn, "Spawn Location"),
 
-		locatorReg(kLocatorSpawn, "Spawn Location"),
+serverCommandObserver(this, &Game::HandleServerCommand),
+joinCommandObserver(this, &Game::HandleJoinCommand),
+cjoinCommandObserver(this, &Game::HandlecJoinCommand),
+hostCommandObserver(this, &Game::HandleHostCommand),
 
-		serverCommandObserver(this, &Game::HandleServerCommand),
-		joinCommandObserver(this, &Game::HandleJoinCommand),
-		cjoinCommandObserver(this, &Game::HandlecJoinCommand),
-		hostCommandObserver(this, &Game::HandleHostCommand),
-
-		serverCommand("server", &serverCommandObserver),
-		joinCommand("join", &joinCommandObserver),
-		cjoinCommand("cjoin", &cjoinCommandObserver),
-		hostCommand("host", &hostCommandObserver)
+serverCommand("server", &serverCommandObserver),
+joinCommand("join", &joinCommandObserver),
+cjoinCommand("cjoin", &cjoinCommandObserver),
+hostCommand("host", &hostCommandObserver)
 {
 	// This installs an event handler for display events. This is only
 	// necessary if we need to perform some action in response to
@@ -213,15 +216,15 @@ Game::Game() :
 	prevEscapeProc = TheInputMgr->GetEscapeProc();
 	prevEscapeCookie = TheInputMgr->GetEscapeCookie();
 	TheInputMgr->SetEscapeProc(&EscapeProc, this);
-    
-    Soldier::Construct();
+
+	Soldier::Construct();
 
 	// This registers our world class constructor with the World Manager.
 	// We only need to do this if we have defined a subclass of the World
 	// class that holds extra information.
 
 	TheWorldMgr->SetWorldConstructor(&ConstructWorld);
-    TheMessageMgr->SetPlayerConstructor(&ConstructPlayer);
+	TheMessageMgr->SetPlayerConstructor(&ConstructPlayer);
 
 	// These create the movement actions that are used to
 	// move the player around and interact with objects.
@@ -233,8 +236,8 @@ Game::Game() :
 	upAction = new MovementAction(kActionUp, kMovementUp);
 	downAction = new MovementAction(kActionDown, kMovementDown);
 	useAction = new UseAction;
-    
-    fireAction = new FireAction;
+
+	fireAction = new FireAction;
 
 	prevEscapeProc = TheInputMgr->GetEscapeProc();
 	prevEscapeData = TheInputMgr->GetEscapeCookie();
@@ -249,8 +252,8 @@ Game::Game() :
 	TheInputMgr->AddAction(upAction);
 	TheInputMgr->AddAction(downAction);
 	TheInputMgr->AddAction(useAction);
-    
-    TheInputMgr->AddAction(fireAction);
+
+	TheInputMgr->AddAction(fireAction);
 
 	// Let the Interface Manager determine when to change input devices to gameplay mode.
 
@@ -263,23 +266,23 @@ Game::Game() :
 	TheEngine->AddCommand(&hostCommand);
 
 	// Set some settings in the network manager.
-    TheNetworkMgr->SetProtocol(C4::kGameProtocol);
-    TheNetworkMgr->SetPortNumber(C4::kGamePort);
-    
+	TheNetworkMgr->SetProtocol(C4::kGameProtocol);
+	TheNetworkMgr->SetPortNumber(C4::kGamePort);
+
 
 	soldierController = nullptr;
 }
 
 Game::~Game()
 {
-    TheMessageMgr->EndGame();
+	TheMessageMgr->EndGame();
 	// When the game DLL is about to be unloaded, this destructor is called.
 
 	TheWorldMgr->UnloadWorld();
 	TheWorldMgr->SetWorldConstructor(nullptr);
-    
-    Soldier::Destruct();
-    
+
+	Soldier::Destruct();
+
 	delete useAction;
 	delete downAction;
 	delete upAction;
@@ -303,7 +306,7 @@ World *Game::ConstructWorld(const char *name, void *cookie)
 
 Player *Game::ConstructPlayer(PlayerKey key, void *data)
 {
-    return (new GamePlayer(key));
+	return (new GamePlayer(key));
 }
 
 void Game::HandleDisplayEvent(const DisplayEventData *eventData, void *cookie)
@@ -331,55 +334,55 @@ EngineResult Game::LoadWorld(const char *name)
 	if (result == kWorldOkay)
 	{
 		GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
-        
-        //if (TheMessageMgr->Server())
-        //{
-            const LocatorMarker *locator = world->GetSpawnLocator();
-            if (locator)
-            {
-                // If a spawn locator was found in the world, put a soldier character there.
-                
-                // The BeginSinglePlayerGame() function puts the Message Manager in single player mode.
-                
-                //TheMessageMgr->BeginSinglePlayerGame();
-                
-                // Calculate the angle corresponding to the direction the character is initially facing.
-                
-                //const Vector3D direction = locator->GetWorldTransform()[0];
-                //float azimuth = Atan(direction.y, direction.x);
-                
-                // Load a soldier model and attach a controller to it.
-                /*
-                Model *model = Model::Get(kModelSoldier);
-                SoldierController *controller = new SoldierController(azimuth);
-                model->SetController(controller);
-                TheGame->soldierController = controller;
-                
-                
-                // Put the model in the world at the locator's position.
-                
-                model->SetNodePosition(locator->GetWorldPosition());
-                locator->GetWorld()->AddNewNode(model);*/
-                
-                //SpinController *controller1 = new SpinController(5.0);
-                //controller1->SetTargetModel(model);
-                
-                // Set the world's current camera to be our chase camera.
-                // The world will not render without a camera being set.
-                
-                //ChaseCamera *camera = world->GetChaseCamera();
-                //camera->SetTargetModel(model);
-                //world->SetCamera(camera);
-                
-                //TheMessageMgr->SendMessageAll(RequestMessage());
-                
-            }
-            
-            TheEngine->Report("Player world loaded.");
-       
 
-        //}
-		
+		//if (TheMessageMgr->Server())
+		//{
+		const LocatorMarker *locator = world->GetSpawnLocator();
+		if (locator)
+		{
+			// If a spawn locator was found in the world, put a soldier character there.
+
+			// The BeginSinglePlayerGame() function puts the Message Manager in single player mode.
+
+			//TheMessageMgr->BeginSinglePlayerGame();
+
+			// Calculate the angle corresponding to the direction the character is initially facing.
+
+			//const Vector3D direction = locator->GetWorldTransform()[0];
+			//float azimuth = Atan(direction.y, direction.x);
+
+			// Load a soldier model and attach a controller to it.
+			/*
+			Model *model = Model::Get(kModelSoldier);
+			SoldierController *controller = new SoldierController(azimuth);
+			model->SetController(controller);
+			TheGame->soldierController = controller;
+
+
+			// Put the model in the world at the locator's position.
+
+			model->SetNodePosition(locator->GetWorldPosition());
+			locator->GetWorld()->AddNewNode(model);*/
+
+			//SpinController *controller1 = new SpinController(5.0);
+			//controller1->SetTargetModel(model);
+
+			// Set the world's current camera to be our chase camera.
+			// The world will not render without a camera being set.
+
+			//ChaseCamera *camera = world->GetChaseCamera();
+			//camera->SetTargetModel(model);
+			//world->SetCamera(camera);
+
+			//TheMessageMgr->SendMessageAll(RequestMessage());
+
+		}
+
+		TheEngine->Report("Player world loaded.");
+
+
+		//}
+
 	}
 
 	return (result);
@@ -414,29 +417,29 @@ Message *Game::ConstructMessage(MessageType type, Decompressor &data) const
 {
 	switch (type)
 	{
-        case kMessageSpawn:
-            
-            return (new SpawnMessage);
-            
-        case kMessageRequest:
-            
-            return (new RequestMessage);
-            
-        case kMessageMovementBegin:
-            
-            return (new ClientMovementMessage(type));
-            
-        case kMessageMovementEnd:
-            
-            return (new ClientMovementMessage(type));
-            
-        case kMessageOrientation:
-            
-            return (new ClientOrientationMessage);
-            
-        case kMessageFired:
-            
-            return (new ClientFiringMessage(type));
+	case kMessageSpawn:
+
+		return (new SpawnMessage);
+
+	case kMessageRequest:
+
+		return (new RequestMessage);
+
+	case kMessageMovementBegin:
+
+		return (new ClientMovementMessage(type));
+
+	case kMessageMovementEnd:
+
+		return (new ClientMovementMessage(type));
+
+	case kMessageOrientation:
+
+		return (new ClientOrientationMessage);
+
+	case kMessageFired:
+
+		return (new ClientFiringMessage(type));
 	}
 
 	return nullptr;
@@ -472,84 +475,84 @@ void Game::HandlecJoinCommand(Command *command, const char *text)
 
 void Game::HandleHostCommand(Command *command, const char *text)
 {
-    if (*text != 0)
-    {
-        ResourceName	name;
-        
-        Text::ReadString(text, name, kMaxResourceNameLength);
-        HostMultiplayerGame(name, 0);
-    }
-    else
-    {
-        //HostGameWindow::Open();
-    }
-    
+	if (*text != 0)
+	{
+		ResourceName	name;
+
+		Text::ReadString(text, name, kMaxResourceNameLength);
+		HostMultiplayerGame(name, 0);
+	}
+	else
+	{
+		//HostGameWindow::Open();
+	}
+
 }
 
 EngineResult Game::HostMultiplayerGame(const char *name, unsigned_int32 flags)
 {
-    //TheNetworkMgr->SetPortNumber(kGamePort);
-    //TheNetworkMgr->SetBroadcastPortNumber(kGamePort);
-    
-    TheMessageMgr->BeginMultiplayerGame(true);
-    TheEngine->Report("Server initialized", kReportError);
-    TheEngine->Report(String<>("Initialized. Hosting on: ") + MessageMgr::AddressToString(TheNetworkMgr->GetLocalAddress(), true));
-    
-    
-    WorldResult result =TheGame->LoadWorld(name);
-    TheGame->currentWorldName = name;
-    
-    
-    TheMessageMgr->SendMessageAll(RequestMessage());
-    
-    if(result !=kWorldOkay){
-        String<128> str("Error loading world: ");
-        str+=name;
-        TheEngine->Report(str, kReportError);
-    }
-    
-    return (result);
+	//TheNetworkMgr->SetPortNumber(kGamePort);
+	//TheNetworkMgr->SetBroadcastPortNumber(kGamePort);
+
+	TheMessageMgr->BeginMultiplayerGame(true);
+	TheEngine->Report("Server initialized", kReportError);
+	TheEngine->Report(String<>("Initialized. Hosting on: ") + MessageMgr::AddressToString(TheNetworkMgr->GetLocalAddress(), true));
+
+
+	WorldResult result = TheGame->LoadWorld(name);
+	TheGame->currentWorldName = name;
+
+
+	TheMessageMgr->SendMessageAll(RequestMessage());
+
+	if (result != kWorldOkay){
+		String<128> str("Error loading world: ");
+		str += name;
+		TheEngine->Report(str, kReportError);
+	}
+
+	return (result);
 }
 
 void Game::HandleJoinCommand(Command *command, const char *text)
 {
-    
-    
-    TheMessageMgr->BeginMultiplayerGame(false);
-    // We'll first want to provide the user with some feedback - so he'll know what he's doing.
-    String<128> str("Attempting to join --> ");
-    str += text;
-    
-    
-    
-    //TheGame->LoadWorld("planetarena");
-    TheWorldMgr->LoadWorld("planetarena");
-    
-    TheEngine->Report(str, kReportError);
-    
-    TheNetworkMgr->SetPortNumber(0);
-    //TheNetworkMgr->SetBroadcastPortNumber(kGamePort);
-    
-    
-    // Now we're just going to (try to) connect to the entered address.
-    
-    NetworkAddress	address;
-    
-    address = MessageMgr::StringToAddress(text);
-    
-    address.SetPort(kGamePort);
-    
-    NetworkResult result = TheMessageMgr->Connect(address);
-    TheEngine->Report(String<>("Attempting connection with: ") + MessageMgr::AddressToString(address, true));
-    
-    if (result == C4::kNetworkOkay)
-    {
-        TheEngine->Report("Network initialized. Waiting on response...");
-    }
-    else
-    {
-        TheEngine->Report(String<>("Issues arose when trying to initialize the connection. Code: ") += result);
-    }
+
+
+	TheMessageMgr->BeginMultiplayerGame(false);
+	// We'll first want to provide the user with some feedback - so he'll know what he's doing.
+	String<128> str("Attempting to join --> ");
+	str += text;
+
+
+
+	//TheGame->LoadWorld("planetarena");
+	TheWorldMgr->LoadWorld("planetarena");
+
+	TheEngine->Report(str, kReportError);
+
+	TheNetworkMgr->SetPortNumber(0);
+	//TheNetworkMgr->SetBroadcastPortNumber(kGamePort);
+
+
+	// Now we're just going to (try to) connect to the entered address.
+
+	NetworkAddress	address;
+
+	address = MessageMgr::StringToAddress(text);
+
+	address.SetPort(kGamePort);
+
+	NetworkResult result = TheMessageMgr->Connect(address);
+	TheEngine->Report(String<>("Attempting connection with: ") + MessageMgr::AddressToString(address, true));
+
+	if (result == C4::kNetworkOkay)
+	{
+		TheEngine->Report("Network initialized. Waiting on response...");
+	}
+	else
+	{
+		TheEngine->Report(String<>("Issues arose when trying to initialize the connection. Code: ") += result);
+	}
 }
 
 
@@ -558,76 +561,76 @@ void Game::HandlePlayerEvent(PlayerEvent event, Player *player, const void *para
 	switch (event)
 	{
 		// We've received a chat. 
-        case kPlayerChatReceived:
-        {
-            // We'll want to display the player's name in front of the chat message,
-			// so we'll first paste the player's name and his message together in a String object.
-			// We limit the size of the displayed text using the String class, which automatically
-			// cuts off text that exceeds the boundary set in the template parameter.
-			String<kMaxChatMessageLength + kMaxPlayerNameLength + 2> text(player->GetPlayerName());
-			text += ": ";
-			text += static_cast<const char *>(param);
+	case kPlayerChatReceived:
+	{
+		// We'll want to display the player's name in front of the chat message,
+		// so we'll first paste the player's name and his message together in a String object.
+		// We limit the size of the displayed text using the String class, which automatically
+		// cuts off text that exceeds the boundary set in the template parameter.
+		String<kMaxChatMessageLength + kMaxPlayerNameLength + 2> text(player->GetPlayerName());
+		text += ": ";
+		text += static_cast<const char *>(param);
 
-			// Next, we'll make the completed message appear in the console.
-			// The kReportError parameter tells the engine to put the message in the console. 
-			// It doesn't actually mean there's an error.
-			TheEngine->Report(text, kReportError);
-			break;
-        }
-            
-        case kPlayerConnected:
-        {
-            TheEngine->Report("Player connected.");
+		// Next, we'll make the completed message appear in the console.
+		// The kReportError parameter tells the engine to put the message in the console. 
+		// It doesn't actually mean there's an error.
+		TheEngine->Report(text, kReportError);
+		break;
+	}
 
-        }
-        
-        
-        case C4::kPlayerInitialized:
-        {
-            TheEngine->Report("Player initialized.");
-            
-            GamePlayer *gp = nullptr;
-            SoldierController *cont = nullptr;
-            Node *node = nullptr;
-            PlayerKey key = -1;
-            long id = -1;
-            Point3D loc;
-            
-            //send initial state
-            
-            // This player just joined, so send him 1 message per
-            // player to spawn a character
-            Player *p = TheMessageMgr->GetFirstPlayer();
-            while(p)
-            {
-                gp = static_cast<GamePlayer *>(p);
-                
-                cont = gp->GetController();
-                if(cont)
-                {
-                    node = cont->GetTargetNode();
-                    
-                    key = gp->GetPlayerKey();
-                    id = cont->GetControllerIndex();
-                    loc = node->GetWorldPosition();
-                    
-                    TheMessageMgr->SendMessage(player->GetPlayerKey(), SpawnMessage(key, id, loc));
-                }
-                p = p->Next();
-            }
-            
-            break;
-        }
-            
-        case C4::kPlayerDisconnected:
-        case C4::kPlayerTimedOut:
-        {
-            // If a player disconnects or times out, send a message to every other
-            // player to delete this soldier.
-            GamePlayer *gp = static_cast<GamePlayer *>(player);
-            TheMessageMgr->SendMessageAll(SoldierDestroyMessage(gp->GetController()->GetControllerIndex()));
-            break;
-        }
+	case kPlayerConnected:
+	{
+		TheEngine->Report("Player connected.");
+
+	}
+
+
+	case C4::kPlayerInitialized:
+	{
+		TheEngine->Report("Player initialized.");
+
+		GamePlayer *gp = nullptr;
+		SoldierController *cont = nullptr;
+		Node *node = nullptr;
+		PlayerKey key = -1;
+		long id = -1;
+		Point3D loc;
+
+		//send initial state
+
+		// This player just joined, so send him 1 message per
+		// player to spawn a character
+		Player *p = TheMessageMgr->GetFirstPlayer();
+		while (p)
+		{
+			gp = static_cast<GamePlayer *>(p);
+
+			cont = gp->GetController();
+			if (cont)
+			{
+				node = cont->GetTargetNode();
+
+				key = gp->GetPlayerKey();
+				id = cont->GetControllerIndex();
+				loc = node->GetWorldPosition();
+
+				TheMessageMgr->SendMessage(player->GetPlayerKey(), SpawnMessage(key, id, loc));
+			}
+			p = p->Next();
+		}
+
+		break;
+	}
+
+	case C4::kPlayerDisconnected:
+	case C4::kPlayerTimedOut:
+	{
+		// If a player disconnects or times out, send a message to every other
+		// player to delete this soldier.
+		GamePlayer *gp = static_cast<GamePlayer *>(player);
+		TheMessageMgr->SendMessageAll(SoldierDestroyMessage(gp->GetController()->GetControllerIndex()));
+		break;
+	}
 	}
 
 	// Finally, we pass the player event to the parent Application's HandlePlayerEvent method,
@@ -640,31 +643,31 @@ void Game::HandleConnectionEvent(ConnectionEvent event, const NetworkAddress& ad
 {
 	switch (event)
 	{
-		case C4::kConnectionClientOpened:
-		{
-			Engine::Report("Client Connected.");
-			break;
-		}
-		case C4::kConnectionClientClosed:
-		case C4::kConnectionClientTimedOut:
-		{
-		  Engine::Report("Client Connection Closed.");
-		  break;
-		}
-		case C4::kConnectionServerAccepted:
-		{
-		  Engine::Report("We are connected");
-		  TheMessageMgr->SendMessageAll(RequestMessage());
+	case C4::kConnectionClientOpened:
+	{
+		Engine::Report("Client Connected.");
+		break;
+	}
+	case C4::kConnectionClientClosed:
+	case C4::kConnectionClientTimedOut:
+	{
+		Engine::Report("Client Connection Closed.");
+		break;
+	}
+	case C4::kConnectionServerAccepted:
+	{
+		Engine::Report("We are connected");
+		TheMessageMgr->SendMessageAll(RequestMessage());
 
-											  break;
-		}
-		case C4::kConnectionServerClosed:
-		case C4::kConnectionServerTimedOut:
-		{
-		  Engine::Report("Server Connection Closed.");
-		  UnloadWorld();
-		  break;
-		}
+		break;
+	}
+	case C4::kConnectionServerClosed:
+	case C4::kConnectionServerTimedOut:
+	{
+		Engine::Report("Server Connection Closed.");
+		UnloadWorld();
+		break;
+	}
 	}
 
 	Application::HandleConnectionEvent(event, address, param);
@@ -672,67 +675,67 @@ void Game::HandleConnectionEvent(ConnectionEvent event, const NetworkAddress& ad
 
 void Game::SpawnSoldier(Player *player, Point3D location, int32 controllerIndex)
 {
-    World *world = TheWorldMgr->GetWorld();
-    if (world)
-    {
-        GamePlayer *gPlayer = static_cast<GamePlayer *>(player);
-        SoldierController *cont = gPlayer->GetController();
-        if (!cont)
-        {
-            cont = new SoldierController();
-            cont->SetControllerIndex(controllerIndex);
-            
-            gPlayer->SetController(cont);
-            
-            Model *soldier = Model::Get(C4::kModelSoldier);
-            soldier->SetController(cont);
-            
-            soldier->SetNodePosition(location);
-            world->AddNewNode(soldier);
-        }
-    }
-    
-    TheEngine->Report("Soldier Spawned.");
+	World *world = TheWorldMgr->GetWorld();
+	if (world)
+	{
+		GamePlayer *gPlayer = static_cast<GamePlayer *>(player);
+		SoldierController *cont = gPlayer->GetController();
+		if (!cont)
+		{
+			cont = new SoldierController();
+			cont->SetControllerIndex(controllerIndex);
+
+			gPlayer->SetController(cont);
+
+			Model *soldier = Model::Get(C4::kModelSoldier);
+			soldier->SetController(cont);
+
+			soldier->SetNodePosition(location);
+			world->AddNewNode(soldier);
+		}
+	}
+
+	TheEngine->Report("Soldier Spawned.");
 }
 
-void Game::CreateBall(float azimuth, Point3D position)
+void Game::CreateBall(GamePlayer *sender, float azimuth, Point3D position)
 {
-    GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
-    
-    Controller *controller1;
-    Model *model1 = nullptr;
-    Point3D zonePosition;
-    float speed = 20.0F;// increase or decrease to change the speed
-    //float azimuth = azimuth;
-    
-    Vector3D direction = *new Vector3D(cos(azimuth), sin(azimuth), 0.0f);
-    
-    //Point3D startPos = controller->GetTargetNode()->GetWorldPosition() + Point3D(0.0F,0.0F,1.0F);
-    Point3D startPos = position + Point3D(0.0F,0.0F,1.0F);
-    
-    direction = direction*speed;
-    
-    controller1 = new BallController(direction);
-    model1 = Model::Get(kModelBall);
-    if (model1)
-    {
-        {
-            model1->SetController(controller1);
-            
-            zonePosition = startPos;
-            model1->SetNodePosition(zonePosition);
-            
-            OmniSource *source = new OmniSource("model/Ball", 40.0F);
-            source->SetNodePosition(zonePosition);
-            
-            world->AddNewNode(source);
-            world->AddNewNode(model1);
-            model1->Update();
-            
-        }
-        
-    }
+	GameWorld *world = static_cast<GameWorld *>(TheWorldMgr->GetWorld());
+	GamePlayer *shooter = static_cast<GamePlayer *>(sender);
+	Controller *controller1;
+	Model *model1 = nullptr;
+	Point3D zonePosition;
+	float speed = 20.0F;// increase or decrease to change the speed
+	//float azimuth = azimuth;
+	Vector3D direction = *new Vector3D(cos(azimuth), sin(azimuth), 0.0f);
+	Vector3D ndir = Normalize(direction);
+	//Point3D startPos = controller->GetTargetNode()->GetWorldPosition() + Point3D(0.0F,0.0F,1.0F);
+	Point3D startPos = position + Point3D(ndir.x, ndir.y, 1.0F);
+
+	direction = direction*speed;
+
+	controller1 = new BallController(direction, shooter);
+	model1 = Model::Get(kModelBall);
+	if (model1)
+	{
+		{
+			model1->SetController(controller1);
+
+			zonePosition = startPos;
+			model1->SetNodePosition(zonePosition);
+
+			OmniSource *source = new OmniSource("model/Ball", 40.0F);
+			source->SetNodePosition(zonePosition);
+
+			world->AddNewNode(source);
+			world->AddNewNode(model1);
+			model1->Update();
+
+		}
+
+	}
 }
+
 
 
 void Game::QuitGame()

@@ -11,21 +11,25 @@
 #include "C4Logo.h"
 #include "C4Markings.h"
 #include "C4Adjusters.h"
+#include "SimpleCharMultiplayer.h"
 
 namespace C4
 {
 
-	
+
 
 	enum
 	{
 		kControllerSpin = 'spin'
 	};
-    
-    enum
-    {
-        kControllerBall			= 'ball'
-    };
+	enum
+	{
+		kControllerBall = 'ball'
+	};
+	enum
+	{
+		kControllerCharacter = 'plyr'
+	};
 
 	class SpinController;
 
@@ -92,46 +96,46 @@ namespace C4
 		// The function that moves the target node
 		void Move(void);
 	};
-    
-    class BallController : public RigidBodyController
-    {
-    private:
-        
-        BallController(const BallController& ballController);
-        
-        Controller *Replicate(void) const override;
-        
-        float				ballAzimuth;
-        Point3D				ballPosition;
-        
-    public:
-        
-        BallController();
-        BallController(Vector3D& velocity);
-        ~BallController();
-        
-        void CreateBall(float azimuth, Point3D position);
-        
-        static bool ValidNode(const Node *node);
-        
-        void Preprocess(void) override;
-        
-        void BeginCreation(float azimuth, Point3D position);
-        
-        void ReceiveMessage(const ControllerMessage *message);
-        ControllerMessage *ConstructMessage(ControllerMessageType type) const;
-        
-        RigidBodyStatus HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody);
-        
-        enum
-        {
-            kBallMessageFired
-        };
-    };
-    
-    
+	class BallController final : public RigidBodyController
+	{
+	private:
+
+		BallController(const BallController& ballController);
+
+		float				ballAzimuth;
+		Point3D				ballPosition;
+		GamePlayer *ballSender;
+		Controller *Replicate(void) const override;
+
+	public:
+		
+		BallController();
+		BallController::BallController(Vector3D& velocity, GamePlayer *sender);//new constructor
+		~BallController();
+
+		void CreateBall(GamePlayer *sender, float azimuth, Point3D position);
+		static bool ValidNode(const Node *node);
+		
+		GamePlayer* GetSender(void) const
+		{
+			return (ballSender);
+		}
+	// Serialization functions
+		void Preprocess(void) override;
+		void ReceiveMessage(const ControllerMessage *message);
+		ControllerMessage *ConstructMessage(ControllerMessageType type) const;
+
+		RigidBodyStatus HandleNewRigidBodyContact(const RigidBodyContact *contact, RigidBodyController *contactBody);
+		RigidBodyStatus HandleNewGeometryContact(const GeometryContact *contact);//declare Handler for Geometry Contact
+		enum
+		{
+			kBallMessageFired
+		};
+	};
+
+
+
+
 
 }
-
-
 #endif
